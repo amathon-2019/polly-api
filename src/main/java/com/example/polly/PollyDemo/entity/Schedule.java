@@ -7,8 +7,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -35,9 +33,11 @@ public class Schedule {
     @Column(name = "due_at")
     private LocalDateTime dueAt;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "schedule_id")
-    private List<Reminder> reminders = new ArrayList<>();
+    @Column(name = "remind_at")
+    private String remindAt;
+
+    @Column(name = "url")
+    private String url;
 
     @CreatedDate
     @Column(name = "created_at")

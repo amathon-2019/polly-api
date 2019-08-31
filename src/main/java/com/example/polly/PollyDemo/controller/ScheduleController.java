@@ -1,20 +1,23 @@
 package com.example.polly.PollyDemo.controller;
 
+import com.example.polly.PollyDemo.assembler.ScheduleAssembler;
 import com.example.polly.PollyDemo.dto.ScheduleBriefResponse;
 import com.example.polly.PollyDemo.dto.ScheduleRequest;
 import com.example.polly.PollyDemo.dto.ScheduleResponse;
-import com.example.polly.PollyDemo.model.ResponseFileView;
 import com.example.polly.PollyDemo.service.PollyService;
+import com.example.polly.PollyDemo.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -22,16 +25,25 @@ import java.util.List;
 @RequestMapping("/api")
 public class ScheduleController {
 
+    private final PollyService pollyService;
+    private final ScheduleService scheduleService;
+    private final ScheduleAssembler scheduleAssembler;
+
     private LocalDateTime localDateTime = LocalDateTime.now();
     private String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    private String fileName = currentDateTime+"_polly_sound.mp3";
-
-    @Autowired
-    private PollyService pollyService;
+    private String fileName = currentDateTime + "_polly_sound.mp3";
 
     @GetMapping("/schedules")
-    public List<ScheduleResponse> getSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken) {
-        return Collections.singletonList(this.createScheduleResponse());
+    public List<ScheduleResponse> getSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken,
+                                               @ApiIgnore @RequestAttribute("memberId") Integer memberId,
+                                               @RequestParam(defaultValue = "0") Integer page,
+                                               @RequestParam(defaultValue = "20") Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return scheduleService.getSchedules(memberId, pageable)
+                .stream()
+                .map(scheduleAssembler::toScheduleResponse)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/schedules/{scheduleId}")
@@ -46,7 +58,7 @@ public class ScheduleController {
      *
      * @param accessToken
      * @param scheduleRequest
-     * */
+     */
     @PostMapping("/schedules")
     @ResponseStatus(HttpStatus.CREATED)
     public ScheduleResponse createSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
@@ -72,7 +84,6 @@ public class ScheduleController {
         scheduleResponse.setId(1);
         scheduleResponse.setTitle(scheduleRequest.getTitle());
         scheduleResponse.setDescription(scheduleRequest.getDescription());
-        scheduleResponse.setRemindAt(localDateTime);
         scheduleResponse.setUrl(pollyService.getMp3(scheduleRequest.getDescription(), fileName));
 
         return this.createScheduleResponse();
@@ -96,7 +107,7 @@ public class ScheduleController {
      * 오늘 남은 일정을 브리핑하기
      */
     @PostMapping("/schedules/brief")
-    public ScheduleBriefResponse berofSchedules() {
+    public ScheduleBriefResponse berifSchedules() {
         ScheduleBriefResponse scheduleBriefResponse = new ScheduleBriefResponse();
         scheduleBriefResponse.setUrl("url");
         return scheduleBriefResponse;
@@ -107,7 +118,6 @@ public class ScheduleController {
         scheduleResponse.setId(1);
         scheduleResponse.setTitle("제목");
         scheduleResponse.setDescription("내용입니다");
-        scheduleResponse.setRemindAt(LocalDateTime.now());
         scheduleResponse.setUrl("url");
         return scheduleResponse;
     }
