@@ -1,7 +1,9 @@
-package com.example.polly.PollyDemo;
+package com.example.polly.PollyDemo.controller;
 
+import com.amazonaws.regions.Regions;
 import com.example.polly.PollyDemo.service.PollyService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +22,12 @@ import java.time.format.DateTimeFormatter;
 @RestController
 @RequestMapping("/polly")
 public class PollyController {
+    @Autowired
+    private PollyService pollyService;
 
     @GetMapping(value = "/message")
     public ResponseEntity<Object> getTestMessage(@RequestParam String country, @RequestParam String text) {
         log.info("]-----] PollyController.getTestMessage params [----[ : country = {} , text = {}", country, text);
-
-        PollyService pollyService = new PollyService();
 
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String fileName = currentDateTime+"_polly_sound.mp3";
@@ -75,8 +77,6 @@ public class PollyController {
     public byte[] getTestMessage2(@RequestParam String country, @RequestParam String text) {
         log.info("]-----] PollyController.getTestMessage2 params [----[ : country = {} , text = {}", country, text);
 
-        PollyService pollyService = new PollyService();
-
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String fileName = currentDateTime+"_polly_sound.mp3";
         String outputFile = "/Users/bsc/Desktop/workspace/aws-polly-test/src/main/resources/static/"+fileName;
@@ -101,8 +101,6 @@ public class PollyController {
     @GetMapping(value = "/play")
     public String getPlay(@RequestParam String country, @RequestParam String text) {
         log.info("]-----] PollyController.getPlay params [----[ : country = {} , text = {}", country, text);
-
-        PollyService pollyService = new PollyService();
 
         try {
             pollyService.play(country, text);
