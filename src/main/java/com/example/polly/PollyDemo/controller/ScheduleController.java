@@ -85,10 +85,10 @@ public class ScheduleController {
         String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String fileName = currentDateTime + "_polly_sound.mp3";
         String text =
-                scheduleRequest.getDueAt().getYear()+"년 "+
-                scheduleRequest.getDueAt().getMonthValue()+"월 "+
-                scheduleRequest.getDueAt().getDayOfMonth()+"일에 "+
-                scheduleRequest.getTitle()+", "+scheduleRequest.getDescription()+" 이 있습니다.";
+                scheduleRequest.getDueAt().getYear() + "년 " +
+                        scheduleRequest.getDueAt().getMonthValue() + "월 " +
+                        scheduleRequest.getDueAt().getDayOfMonth() + "일에 " +
+                        scheduleRequest.getTitle() + ", " + scheduleRequest.getDescription() + " 이 있습니다.";
 
         String pollySoundUrl = pollyService.getMp3(text, fileName);
 
@@ -115,12 +115,13 @@ public class ScheduleController {
         return this.createScheduleResponse();
     }
 
-    @ApiOperation(value = "일정을 삭제합니다. (아직 구현되지 않았습니다)")
+    @ApiOperation(value = "일정을 삭제합니다.")
     @DeleteMapping("/schedules/{scheduleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
+                               @ApiIgnore @RequestAttribute("memberId") Integer memberId,
                                @PathVariable Integer scheduleId) {
-
+        scheduleService.deleteSchedule(memberId, scheduleId);
     }
 
     /**
@@ -145,17 +146,17 @@ public class ScheduleController {
         } else {
             StringBuffer stringBuffer = new StringBuffer();
             stringBuffer.append("오늘 예정된 일정은, ");
-            for(Schedule item : items) {
+            for (Schedule item : items) {
 
                 String AMorPM = "오전 ";
-                String hour = item.getDueAt().getHour()+"시 ";
-                String minute = item.getDueAt().getMinute() == 0 ? "" : item.getDueAt().getMinute()+"분 ";
+                String hour = item.getDueAt().getHour() + "시 ";
+                String minute = item.getDueAt().getMinute() == 0 ? "" : item.getDueAt().getMinute() + "분 ";
 
-                if(item.getDueAt().getHour() > 12) {
+                if (item.getDueAt().getHour() > 12) {
                     AMorPM = "오후 ";
-                    hour = (item.getDueAt().getHour() - 12)+"시 ";
+                    hour = (item.getDueAt().getHour() - 12) + "시 ";
                 }
-                stringBuffer.append(AMorPM + hour + minute + item.getTitle()+", ");
+                stringBuffer.append(AMorPM + hour + minute + item.getTitle() + ", ");
             }
             stringBuffer.append("입니다.");
 
