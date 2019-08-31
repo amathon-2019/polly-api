@@ -3,11 +3,13 @@ package com.example.polly.PollyDemo.service;
 import com.example.polly.PollyDemo.NotFoundException;
 import com.example.polly.PollyDemo.entity.Schedule;
 import com.example.polly.PollyDemo.repository.ScheduleRepository;
+import com.example.polly.PollyDemo.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +34,7 @@ public class ScheduleService {
         if (pageable == null) {
             throw new IllegalArgumentException("'pageable' must not be null");
         }
-        return scheduleRepository.findByMemberIdAndOrderByCreatedAt(memberId, pageable)
+        return scheduleRepository.findByMemberIdOrderByCreatedAt(memberId, pageable)
                 .stream()
                 .collect(Collectors.toList());
     }
@@ -48,5 +50,15 @@ public class ScheduleService {
         return scheduleRepository.findById(scheduleId)
                 .filter(schedule -> memberId.equals(schedule.getMemberId()))
                 .orElseThrow(() -> new NotFoundException("schedule not found. scheduleId:" + scheduleId));
+    }
+
+    @Transactional
+    public List<Schedule> getSchedulesForBriefing(Integer memberId) {
+        if (memberId == null) {
+            throw new IllegalArgumentException("'memberId' must not be null");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime midnight = DateTimeUtils.getLastTimeOfDay(now);
+        return scheduleRepository.findByMemberIdAndDueAtAfterAndDueAtBefore(memberId, now, midnight);
     }
 }
