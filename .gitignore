@@ -29,4 +29,4 @@ build/
 
 ### VS Code ###
 .vscode/
-.application-local.properties
+/src/main/resources/application-local.properties
