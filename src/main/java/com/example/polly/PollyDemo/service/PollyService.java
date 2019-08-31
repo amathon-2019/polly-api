@@ -20,11 +20,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -78,10 +76,10 @@ public class PollyService {
      * synthesize 메서드를 통해 생성된 음성의 mp3파일을 S3 버킷에 업로드 하고
      * 업로드한 url을 리턴해주는 메서드
      */
-    public ResponseFileView getMp3(String text, String fileName) {
+    public String getMp3(String text, String fileName) {
         log.info("]-----] PollyService.getMp3::params [-----[ : text : {} , fileName : {}", text, fileName);
 
-        ResponseFileView view = new ResponseFileView();
+        String returnUrl = null;
 
         SynthesizeSpeechRequest synthesizeSpeechRequest = new SynthesizeSpeechRequest()
                 .withOutputFormat(OutputFormat.Mp3)
@@ -104,18 +102,44 @@ public class PollyService {
             URL url = s3Client.getUrl(bucketItem.getName(), fileName);
             log.info("]-----] AWS S3 File Uploaded link [-----[ : Host : {} , Path : {} , File : {} ", url.getHost(), url.getPath(), url.getFile());
 
-            view.setStatusCode("200");
-            view.setMessage("Success!");
-            view.setFileUrl("http://"+url.getHost() + url.getPath());
-
+            returnUrl = "http://"+url.getHost() + url.getPath();
         } catch (Exception e) {
             System.err.println("Exception caught: " + e);
-            view.setStatusCode("500");
-            view.setMessage("Fail! : " + e.toString());
-            view.setFileUrl(null);
+        } finally {
+            return returnUrl;
         }
+    }
 
-        return view;
+    /**
+     * synthesize 메서드를 통해 생성된 음성의 mp3파일을 FileOutputStream으로 return 해주는 메서드
+     */
+    public FileOutputStream getFileOutputStream(String text, String fileName) {
+        log.info("]-----] PollyService.getFileOutputStream::params [-----[ : text : {}", text);
+
+        SynthesizeSpeechRequest synthesizeSpeechRequest = new SynthesizeSpeechRequest()
+                .withOutputFormat(OutputFormat.Mp3)
+                .withVoiceId(voice.getId())
+                .withText(text);
+
+        FileOutputStream outputStream = null;
+
+        try {
+            outputStream = new FileOutputStream(new File(fileName));
+            SynthesizeSpeechResult synthesizeSpeechResult = polly.synthesizeSpeech(synthesizeSpeechRequest);
+            byte[] buffer = new byte[2 * 1024];
+            int readBytes;
+
+            try (InputStream in = synthesizeSpeechResult.getAudioStream()){
+                while ((readBytes = in.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, readBytes);
+                }
+                outputStream.close();
+            }
+        } catch (Exception e) {
+            System.err.println("Exception caught: " + e);
+        } finally {
+            return outputStream;
+        }
     }
 
     /**
@@ -179,6 +203,9 @@ public class PollyService {
         player.play();
     }
 
+    /**
+     * country -> RegionsEnum
+     * */
     private Region getRegionEnum(String country) {
         Region region;
         switch (country) {
@@ -198,6 +225,9 @@ public class PollyService {
         return region;
     }
 
+    /**
+     * country -> Regions
+     * */
     private Regions getRegions(String country) {
         Regions regions;
         switch (country) {
@@ -217,6 +247,9 @@ public class PollyService {
         return regions;
     }
 
+    /**
+     * country -> languageCode
+     * */
     private String getVoiceLanguageCode(String country) {
         String languageCode;
         switch (country) {
@@ -236,6 +269,9 @@ public class PollyService {
         return languageCode;
     }
 
+    /**
+     * Regions -> languageCode
+     * */
     private String getVoiceLanguageCode(Regions regions) {
         String languageCode;
         switch (regions.getName()) {
@@ -254,5 +290,37 @@ public class PollyService {
         }
         return languageCode;
     }
+
+//    private String doSentenceConversion(String type, String title, String description, LocalDateTime dateTime) {
+//
+//        /*
+//        1. 할일 하나에 대한 미리알림 시 제목, 본문 같이 읽기
+//        ex) 00시00분에 {제목}, {본문} 이 있습니다.
+//
+//        2. briefing
+//        - 버튼 누를 시 -> 현재부터 24:00까지 해야할 모든 일정을 브리핑
+//        ex) 앞으로 오늘 남은 일정은 00시00분에 {제목}, 00시00분에 {제목}, 00시00분에 {제목} 입니다.
+//        ex) 앞으로 남은 일정은 없습니다.
+//        - 알림 시각을 설정하여 브리핑
+//        ex) 오늘 예정된 일정은 ({시간}, {제목}), ({시간} {제목}), ({시간} {제목}) 입니다.
+//        ex) 앞으로 남은 일정은 없습니다. (edited)
+//        * */
+//        String converionText = null;
+//
+//        switch (type) {
+//            case "schedule":
+//                converionText = dateTime.toString()+"에 "+title+", "+description+" 이 있습니다.";
+//                break;
+//            case "brief":
+//                converionText = "오늘 예정된 일정은 ";
+//                for ()
+//                break;
+//            default :
+//
+//                break;
+//
+//
+//        }
+//    }
 
 }
