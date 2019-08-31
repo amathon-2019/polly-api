@@ -10,10 +10,10 @@ public final class DateTimeUtils {
         return LocalDateTime.of(
                 localDateTime.getYear(),
                 localDateTime.getMonth(),
-                localDateTime.getDayOfMonth() + 1,
+                localDateTime.getDayOfMonth(),
                 0,
                 0,
                 0
-        );
+        ).plusDays(1L);
     }
 }
