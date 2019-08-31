@@ -20,7 +20,9 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Api(value = "일정", description = "인증이 필요한 요청입니다.")
@@ -36,25 +38,31 @@ public class ScheduleController {
 
     @ApiOperation(value = "일정 목록을 조회합니다.")
     @GetMapping("/schedules")
-    public List<ScheduleResponse> getSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken,
+    public Map<String, List<ScheduleResponse>> getSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken,
                                                @ApiIgnore @RequestAttribute("memberId") Integer memberId,
                                                @RequestParam(defaultValue = "0") Integer page,
                                                @RequestParam(defaultValue = "20") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return scheduleService.getSchedules(memberId, pageable)
+        Map<String, List<ScheduleResponse>> map = new HashMap<>();
+        map.put("responseData", scheduleService.getSchedules(memberId, pageable)
                 .stream()
                 .map(scheduleAssembler::toScheduleResponse)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+
+        return map;
     }
 
     @ApiOperation(value = "일정 한 개를 조회합니다.")
     @GetMapping("/schedules/{scheduleId}")
-    public ScheduleResponse getSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
+    public Map<String, ScheduleResponse> getSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
                                         @ApiIgnore @RequestAttribute("memberId") Integer memberId,
                                         @PathVariable Integer scheduleId) {
+
+        Map<String, ScheduleResponse> map = new HashMap<>();
         Schedule schedule = scheduleService.getSchedule(memberId, scheduleId);
-        return scheduleAssembler.toScheduleResponse(schedule);
+        map.put("responseData", scheduleAssembler.toScheduleResponse(schedule));
+        return map;
     }
 
 
