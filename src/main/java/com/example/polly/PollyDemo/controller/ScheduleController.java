@@ -4,8 +4,11 @@ import com.example.polly.PollyDemo.assembler.ScheduleAssembler;
 import com.example.polly.PollyDemo.dto.ScheduleBriefResponse;
 import com.example.polly.PollyDemo.dto.ScheduleRequest;
 import com.example.polly.PollyDemo.dto.ScheduleResponse;
+import com.example.polly.PollyDemo.entity.Schedule;
 import com.example.polly.PollyDemo.service.PollyService;
 import com.example.polly.PollyDemo.service.ScheduleService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Api(value = "일정", description = "인증이 필요한 요청입니다.")
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class ScheduleController {
     private String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     private String fileName = currentDateTime + "_polly_sound.mp3";
 
+    @ApiOperation(value = "일정 목록을 조회합니다.")
     @GetMapping("/schedules")
     public List<ScheduleResponse> getSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken,
                                                @ApiIgnore @RequestAttribute("memberId") Integer memberId,
@@ -46,10 +51,13 @@ public class ScheduleController {
                 .collect(Collectors.toList());
     }
 
+    @ApiOperation(value = "일정 한 개를 조회합니다.")
     @GetMapping("/schedules/{scheduleId}")
     public ScheduleResponse getSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
+                                        @ApiIgnore @RequestAttribute("memberId") Integer memberId,
                                         @PathVariable Integer scheduleId) {
-        return this.createScheduleResponse();
+        Schedule schedule = scheduleService.getSchedule(memberId, scheduleId);
+        return scheduleAssembler.toScheduleResponse(schedule);
     }
 
 
@@ -59,6 +67,7 @@ public class ScheduleController {
      * @param accessToken
      * @param scheduleRequest
      */
+    @ApiOperation(value = "일정을 등록합니다. ")
     @PostMapping("/schedules")
     @ResponseStatus(HttpStatus.CREATED)
     public ScheduleResponse createSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
@@ -89,6 +98,7 @@ public class ScheduleController {
         return this.createScheduleResponse();
     }
 
+    @ApiOperation(value = "일정을 수정합니다. (아직 구현되지 않았습니다)")
     @PutMapping("/schedules/{scheduleId}")
     public ScheduleResponse updateSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
                                            @PathVariable Integer scheduleId,
@@ -96,6 +106,7 @@ public class ScheduleController {
         return this.createScheduleResponse();
     }
 
+    @ApiOperation(value = "일정을 삭제합니다. (아직 구현되지 않았습니다)")
     @DeleteMapping("/schedules/{scheduleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
@@ -106,8 +117,9 @@ public class ScheduleController {
     /**
      * 오늘 남은 일정을 브리핑하기
      */
+    @ApiOperation(value = "오늘 남은 일정을 브리핑합니다. ")
     @PostMapping("/schedules/brief")
-    public ScheduleBriefResponse berifSchedules() {
+    public ScheduleBriefResponse berifSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken) {
         ScheduleBriefResponse scheduleBriefResponse = new ScheduleBriefResponse();
         scheduleBriefResponse.setUrl("url");
         return scheduleBriefResponse;
