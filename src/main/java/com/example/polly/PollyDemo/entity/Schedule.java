@@ -1,6 +1,7 @@
 package com.example.polly.PollyDemo.entity;
 
 import lombok.*;
+import org.apache.tomcat.jni.Local;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -34,7 +35,7 @@ public class Schedule {
     private LocalDateTime dueAt;
 
     @Column(name = "remind_at")
-    private String remindAt;
+    private LocalDateTime remindAt;
 
     @Column(name = "url")
     private String url;
