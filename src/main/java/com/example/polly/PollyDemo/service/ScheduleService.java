@@ -1,6 +1,7 @@
 package com.example.polly.PollyDemo.service;
 
 import com.example.polly.PollyDemo.NotFoundException;
+import com.example.polly.PollyDemo.dto.ScheduleInsertDTO;
 import com.example.polly.PollyDemo.entity.Schedule;
 import com.example.polly.PollyDemo.repository.ScheduleRepository;
 import com.example.polly.PollyDemo.utils.DateTimeUtils;
@@ -22,6 +23,18 @@ public class ScheduleService {
     public Schedule createSchedule(String title) {
         Schedule schedule = Schedule.builder()
                 .title(title)
+                .build();
+        return scheduleRepository.save(schedule);
+    }
+
+    @Transactional
+    public Schedule createSchedule(ScheduleInsertDTO dto) {
+        Schedule schedule = Schedule.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .dueAt(dto.getDueAt())
+                .remindAt(dto.getRemindAt())
+                .url(dto.getUrl())
                 .build();
         return scheduleRepository.save(schedule);
     }

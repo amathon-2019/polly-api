@@ -11,5 +11,6 @@ public class ScheduleResponse {
     private String title;
     private String description;
     private LocalDateTime dueAt;
+    private LocalDateTime remindAt;
     private String url;
 }

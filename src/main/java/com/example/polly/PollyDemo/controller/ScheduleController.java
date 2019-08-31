@@ -2,6 +2,7 @@ package com.example.polly.PollyDemo.controller;
 
 import com.example.polly.PollyDemo.assembler.ScheduleAssembler;
 import com.example.polly.PollyDemo.dto.ScheduleBriefResponse;
+import com.example.polly.PollyDemo.dto.ScheduleInsertDTO;
 import com.example.polly.PollyDemo.dto.ScheduleRequest;
 import com.example.polly.PollyDemo.dto.ScheduleResponse;
 import com.example.polly.PollyDemo.entity.Schedule;
@@ -32,10 +33,6 @@ public class ScheduleController {
     private final PollyService pollyService;
     private final ScheduleService scheduleService;
     private final ScheduleAssembler scheduleAssembler;
-
-    private LocalDateTime localDateTime = LocalDateTime.now();
-    private String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    private String fileName = currentDateTime + "_polly_sound.mp3";
 
     @ApiOperation(value = "일정 목록을 조회합니다.")
     @GetMapping("/schedules")
@@ -75,27 +72,29 @@ public class ScheduleController {
 
         log.info("]-----] POST :: ScheduleController.createSchedule [----[ : ScheduleRequest = {}", scheduleRequest);
 
-        /*
-        1. 할일 하나에 대한 미리알림 시 제목, 본문 같이 읽기
-        ex) 00시00분에 {제목}, {본문} 이 있습니다.
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String fileName = currentDateTime + "_polly_sound.mp3";
+        String text =
+                scheduleRequest.getDueAt().getYear()+"년 "+
+                scheduleRequest.getDueAt().getMonthValue()+"월 "+
+                scheduleRequest.getDueAt().getDayOfMonth()+"일에 "+
+                scheduleRequest.getTitle()+", "+scheduleRequest.getDescription()+" 이 있습니다.";
 
-        2. briefing
-        - 버튼 누를 시 -> 현재부터 24:00까지 해야할 모든 일정을 브리핑
-        ex) 앞으로 오늘 남은 일정은 00시00분에 {제목}, 00시00분에 {제목}, 00시00분에 {제목} 입니다.
-        ex) 앞으로 남은 일정은 없습니다.
-        - 알림 시각을 설정하여 브리핑
-        ex) 오늘 예정된 일정은 ({시간}, {제목}), ({시간} {제목}), ({시간} {제목}) 입니다.
-        ex) 앞으로 남은 일정은 없습니다. (edited)
-        * */
+        String pollySoundUrl = pollyService.getMp3(text, fileName);
 
-        ScheduleResponse response = new ScheduleResponse();
-        ScheduleResponse scheduleResponse = new ScheduleResponse();
-        scheduleResponse.setId(1);
-        scheduleResponse.setTitle(scheduleRequest.getTitle());
-        scheduleResponse.setDescription(scheduleRequest.getDescription());
-        scheduleResponse.setUrl(pollyService.getMp3(scheduleRequest.getDescription(), fileName));
+        ScheduleInsertDTO dto = new ScheduleInsertDTO();
+        dto.setTitle(scheduleRequest.getTitle());
+        dto.setDescription(scheduleRequest.getDescription());
+        dto.setDueAt(scheduleRequest.getDueAt());
+        dto.setRemindAt(scheduleRequest.getRemindAt());
+        dto.setUrl(pollySoundUrl);
 
-        return this.createScheduleResponse();
+        Schedule result = scheduleService.createSchedule(dto);
+
+        ScheduleResponse scheduleResponse = scheduleAssembler.toScheduleResponse(result);
+
+        return scheduleResponse;
     }
 
     @ApiOperation(value = "일정을 수정합니다. (아직 구현되지 않았습니다)")

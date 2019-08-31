@@ -5,9 +5,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class ScheduleRequest {
+public class ScheduleInsertDTO {
     private String title;
     private String description;
     private LocalDateTime dueAt;
     private LocalDateTime remindAt;
+    private String url;
 }
