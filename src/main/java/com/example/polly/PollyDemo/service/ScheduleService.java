@@ -31,6 +31,7 @@ public class ScheduleService {
     public Schedule createSchedule(ScheduleInsertDTO dto) {
         Schedule schedule = Schedule.builder()
                 .title(dto.getTitle())
+                .memberId(dto.getMemberId())
                 .description(dto.getDescription())
                 .dueAt(dto.getDueAt())
                 .remindAt(dto.getRemindAt())

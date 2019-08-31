@@ -68,6 +68,7 @@ public class ScheduleController {
     @PostMapping("/schedules")
     @ResponseStatus(HttpStatus.CREATED)
     public ScheduleResponse createSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
+                                           @ApiIgnore @RequestAttribute("memberId") Integer memberId,
                                            @RequestBody ScheduleRequest scheduleRequest) {
 
         log.info("]-----] POST :: ScheduleController.createSchedule [----[ : ScheduleRequest = {}", scheduleRequest);
@@ -85,6 +86,7 @@ public class ScheduleController {
 
         ScheduleInsertDTO dto = new ScheduleInsertDTO();
         dto.setTitle(scheduleRequest.getTitle());
+        dto.setMemberId(memberId);
         dto.setDescription(scheduleRequest.getDescription());
         dto.setDueAt(scheduleRequest.getDueAt());
         dto.setRemindAt(scheduleRequest.getRemindAt());
@@ -118,9 +120,40 @@ public class ScheduleController {
      */
     @ApiOperation(value = "오늘 남은 일정을 브리핑합니다. ")
     @PostMapping("/schedules/brief")
-    public ScheduleBriefResponse berifSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken) {
+    public ScheduleBriefResponse berifSchedules(@RequestHeader(name = "Authorization", required = false) String accessToken,
+                                                @ApiIgnore @RequestAttribute("memberId") Integer memberId) {
+        log.info("]-----] POST :: ScheduleController.berifSchedules [----[ : accessToken = {}", accessToken);
+
+        List<Schedule> items = scheduleService.getSchedulesForBriefing(memberId);
+
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String fileName = currentDateTime + "_polly_sound.mp3";
+
         ScheduleBriefResponse scheduleBriefResponse = new ScheduleBriefResponse();
-        scheduleBriefResponse.setUrl("url");
+
+        if (items.size() < 1) {
+            scheduleBriefResponse.setUrl(pollyService.getMp3("앞으로 남은 일정은 없습니다.", fileName));
+        } else {
+            StringBuffer stringBuffer = new StringBuffer();
+            stringBuffer.append("오늘 예정된 일정은, ");
+            for(Schedule item : items) {
+
+                String AMorPM = "오전 ";
+                String hour = item.getDueAt().getHour()+"시 ";
+                String minute = item.getDueAt().getMinute() == 0 ? "" : item.getDueAt().getMinute()+"분 ";
+
+                if(item.getDueAt().getHour() > 12) {
+                    AMorPM = "오후 ";
+                    hour = (item.getDueAt().getHour() - 12)+"시 ";
+                }
+                stringBuffer.append(AMorPM + hour + minute + item.getTitle()+", ");
+            }
+            stringBuffer.append("입니다.");
+
+            scheduleBriefResponse.setUrl(pollyService.getMp3(stringBuffer.toString(), fileName));
+        }
+
         return scheduleBriefResponse;
     }
 
