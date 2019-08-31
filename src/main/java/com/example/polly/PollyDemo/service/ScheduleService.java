@@ -1,5 +1,6 @@
 package com.example.polly.PollyDemo.service;
 
+import com.example.polly.PollyDemo.NotFoundException;
 import com.example.polly.PollyDemo.entity.Schedule;
 import com.example.polly.PollyDemo.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,5 +35,18 @@ public class ScheduleService {
         return scheduleRepository.findByMemberIdAndOrderByCreatedAt(memberId, pageable)
                 .stream()
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Schedule getSchedule(Integer memberId, Integer scheduleId) {
+        if (memberId == null) {
+            throw new IllegalArgumentException("'memberId' must not be null");
+        }
+        if (scheduleId == null) {
+            throw new IllegalArgumentException("'scheduleId' must not be null");
+        }
+        return scheduleRepository.findById(scheduleId)
+                .filter(schedule -> memberId.equals(schedule.getMemberId()))
+                .orElseThrow(() -> new NotFoundException("schedule not found. scheduleId:" + scheduleId));
     }
 }
