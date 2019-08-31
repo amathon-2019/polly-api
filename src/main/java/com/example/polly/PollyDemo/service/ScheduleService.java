@@ -119,7 +119,7 @@ public class ScheduleService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void deleteBucketObject(ScheduleDeletedEvent event) {
-        s3Client.deleteBucketAnalyticsConfiguration(
+        s3Client.deleteObject(
                 event.getBucketName(),
                 event.getObjectId()
         );
