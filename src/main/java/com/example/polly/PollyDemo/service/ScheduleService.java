@@ -3,9 +3,12 @@ package com.example.polly.PollyDemo.service;
 import com.example.polly.PollyDemo.entity.Schedule;
 import com.example.polly.PollyDemo.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,5 +21,18 @@ public class ScheduleService {
                 .title(title)
                 .build();
         return scheduleRepository.save(schedule);
+    }
+
+    @Transactional
+    public List<Schedule> getSchedules(Integer memberId, Pageable pageable) {
+        if (memberId == null) {
+            throw new IllegalArgumentException("'memberId' must not be null");
+        }
+        if (pageable == null) {
+            throw new IllegalArgumentException("'pageable' must not be null");
+        }
+        return scheduleRepository.findByMemberIdAndOrderByCreatedAt(memberId, pageable)
+                .stream()
+                .collect(Collectors.toList());
     }
 }
