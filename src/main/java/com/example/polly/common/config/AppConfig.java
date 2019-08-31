@@ -4,15 +4,14 @@ import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+
+@Profile("!local")
 @Configuration
-@ComponentScan("com.example.awspollytest.awspollytest.**")
+@ComponentScan("com.example.polly.**")
 //@PropertySource("classpath:database.properties")
 @EnableTransactionManagement
 public class AppConfig {
@@ -32,7 +31,6 @@ public class AppConfig {
         environmentStringPBEConfig.setPasswordEnvName("APP_ENCRYPTION_PASSWORD");
         return environmentStringPBEConfig;
     }
-
 
     @Bean
     public PooledPBEStringEncryptor encryptor() {

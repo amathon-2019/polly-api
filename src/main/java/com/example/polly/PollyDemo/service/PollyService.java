@@ -1,92 +1,40 @@
 package com.example.polly.PollyDemo.service;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.polly.AmazonPollyClient;
-import com.amazonaws.services.polly.AmazonPollyClientBuilder;
 import com.amazonaws.services.polly.model.*;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 
 @Slf4j
+@Service
 public class PollyService {
 
-//    @Autowired
-//    AwsConfig awsConfig;
-
-//    @Autowired
-//    private AwsCredentials credentials;
-
-    private final String awsAccessKey = "AKIASQVX6OZJLPGPYXAG";
-    private final String awsSecretKey = "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";
-
-//    @Value("${aws.access.key}")
-//    private String awsAccessKey;
-//
-//    @Value("${aws.access.key}")
-//    private String awsSecretKey;
-
-    public BasicAWSCredentials credentials() {
-        log.info("]-----] AWS Configuration :: credentials [-----[ {} , {}", awsAccessKey, awsSecretKey);
-        System.out.println("credentials: " + awsAccessKey + ", " + awsSecretKey);
-        return new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-    }
-
-
-    private final AmazonPollyClient polly;
-    private final Voice voice;
     private static final String MESSAGE = "축하합니다 Java에서 Amazon Polly의 데모를 성공적으로 구축했습니다. Amazon Polly를 사용하여 음성 지원 앱을 구축하는 것은 재미 있으며, 항상 AWS 웹 사이트에서 Amazon Polly 및 기타 AWS의 훌륭한 서비스 사용에 대한 팁과 요령을 확인하십시오.";
+    @Autowired
+    private AWSCredentials credentials;
+    @Autowired
+    @Qualifier("pollyClientKorea")
+    private AmazonPollyClient polly;
+    @Autowired
+    private PollyService self;
+    private Voice voice;
 
-
-    public PollyService() {
-//        polly = new AmazonPollyClient(new DefaultAWSCredentialsProviderChain(), new ClientConfiguration());
-//        polly.setRegion(Region.getRegion(Regions.AP_NORTHEAST_2));
-
-        polly = (AmazonPollyClient) AmazonPollyClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials()))
-                .withRegion(Regions.AP_NORTHEAST_2)
-                .build();
-
+    @PostConstruct
+    public void init() {
         // describe voices request를 생성
         DescribeVoicesRequest describeVoicesRequest = new DescribeVoicesRequest().withLanguageCode("ko-KR");
-
-        // Synchronously ask Amazon Polly to describe available TTS voices.
-        DescribeVoicesResult describeVoicesResult = polly.describeVoices(describeVoicesRequest);
-        voice = describeVoicesResult.getVoices().get(0);
-
-    }
-
-    public PollyService(String country) {
-        // 특정 지역에서 Amazon Polly 클라이언트 생성
-        polly = (AmazonPollyClient) AmazonPollyClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials()))
-                .withRegion(getRegions(country))
-                .build();
-
-        // describe voices request를 생성
-        DescribeVoicesRequest describeVoicesRequest = new DescribeVoicesRequest().withLanguageCode(getVoiceLanguageCode(country));
-
-        // Synchronously ask Amazon Polly to describe available TTS voices.
-        DescribeVoicesResult describeVoicesResult = polly.describeVoices(describeVoicesRequest);
-        voice = describeVoicesResult.getVoices().get(0);
-    }
-
-    public PollyService(Regions regions) {
-        // 특정 지역에서 Amazon Polly 클라이언트 생성
-        polly = (AmazonPollyClient) AmazonPollyClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials()))
-                .withRegion(regions)
-                .build();
-
-        // describe voices request를 생성
-        DescribeVoicesRequest describeVoicesRequest = new DescribeVoicesRequest().withLanguageCode(getVoiceLanguageCode(regions));
 
         // Synchronously ask Amazon Polly to describe available TTS voices.
         DescribeVoicesResult describeVoicesResult = polly.describeVoices(describeVoicesRequest);
@@ -98,7 +46,7 @@ public class PollyService {
      *
      * @param text
      * @param format
-     * */
+     */
     public SynthesizeSpeechResult synthesize(String text, OutputFormat format) throws IOException {
         SynthesizeSpeechRequest synthReq = new SynthesizeSpeechRequest().withText(text).withVoiceId(voice.getId()).withOutputFormat(format);
         SynthesizeSpeechResult synthRes = polly.synthesizeSpeech(synthReq);
@@ -108,26 +56,24 @@ public class PollyService {
 
     /**
      * synthesize 메서드를 통해 생성된 음성의 contentType을 리턴해주는 메서드
-     * */
+     */
     public String getContentType(String text, String country) throws IOException {
-        PollyService message = new PollyService(getRegions(country));
-        return message.synthesize(text, OutputFormat.Mp3).getContentType();
+        return self.synthesize(text, OutputFormat.Mp3).getContentType();
     }
 
     /**
      * synthesize 메서드를 통해 생성된 음성의 mp3파일의 InputStream을 리턴해주는 메서드
-     * */
+     */
     public InputStream getMp3(String text, String country) throws Exception {
-        PollyService message = new PollyService(getRegions(country));
-        return message.synthesize(text, OutputFormat.Mp3).getAudioStream();
+        return self.synthesize(text, OutputFormat.Mp3).getAudioStream();
     }
 
     /**
      * synthesize 메서드를 통해 생성된 음성을 플레이어로 실행시키는 메서드
-     * */
+     */
     public void playDemo() throws Exception {
         //create the test class
-        PollyService helloWorld = new PollyService(Regions.AP_NORTHEAST_2);
+        PollyService helloWorld = self;
         //get the audio stream
         InputStream speechStream = helloWorld.synthesize(MESSAGE, OutputFormat.Mp3).getAudioStream();
 
@@ -155,10 +101,10 @@ public class PollyService {
 
     /**
      * synthesize 메서드를 통해 생성된 음성을 플레이어로 실행시키는 메서드
-     * */
+     */
     public void play(String country, String text) throws Exception {
         //create the test class
-        PollyService service = new PollyService(getRegions(country));
+        PollyService service = self;
         //get the audio stream
         InputStream speechStream = service.synthesize(text, OutputFormat.Mp3).getAudioStream();
 
@@ -195,7 +141,8 @@ public class PollyService {
             case "JP":
                 region = Region.getRegion(Regions.AP_NORTHEAST_1);
                 break;
-            default: region = Region.getRegion(Regions.AP_NORTHEAST_2);
+            default:
+                region = Region.getRegion(Regions.AP_NORTHEAST_2);
                 break;
         }
         return region;
@@ -213,7 +160,8 @@ public class PollyService {
             case "JP":
                 regions = Regions.AP_NORTHEAST_1;
                 break;
-            default: regions = Regions.AP_NORTHEAST_2;
+            default:
+                regions = Regions.AP_NORTHEAST_2;
                 break;
         }
         return regions;
@@ -231,7 +179,8 @@ public class PollyService {
             case "JP":
                 languageCode = "ja-JP";
                 break;
-            default: languageCode = "ko-KR";
+            default:
+                languageCode = "ko-KR";
                 break;
         }
         return languageCode;
@@ -249,7 +198,8 @@ public class PollyService {
             case "ap-northeast-1":
                 languageCode = "ja-JP";
                 break;
-            default: languageCode = "ko-KR";
+            default:
+                languageCode = "ko-KR";
                 break;
         }
         return languageCode;
