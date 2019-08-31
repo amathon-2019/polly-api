@@ -23,7 +23,7 @@ public class LoginService {
         }
         // uuid 로 멤버 조회. 없으면 새로 생성
         Member member = memberRepository.findByUuid(uuid)
-                .orElse(memberService.createMember(uuid));
+                .orElseGet(() -> memberService.createMember(uuid));
         return jwtFactory.generateToken(member.getId());
     }
 }
