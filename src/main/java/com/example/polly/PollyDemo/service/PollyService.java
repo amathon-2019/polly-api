@@ -22,11 +22,11 @@ import java.io.InputStream;
 public class PollyService {
 
     private static final String MESSAGE = "축하합니다 Java에서 Amazon Polly의 데모를 성공적으로 구축했습니다. Amazon Polly를 사용하여 음성 지원 앱을 구축하는 것은 재미 있으며, 항상 AWS 웹 사이트에서 Amazon Polly 및 기타 AWS의 훌륭한 서비스 사용에 대한 팁과 요령을 확인하십시오.";
-    @Autowired
-    private AWSCredentials credentials;
+
     @Autowired
     @Qualifier("pollyClientKorea")
     private AmazonPollyClient polly;
+
     @Autowired
     private PollyService self;
     private Voice voice;
