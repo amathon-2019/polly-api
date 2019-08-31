@@ -1,5 +1,6 @@
 package com.example.polly.PollyDemo.controller;
 
+import com.example.polly.PollyDemo.dto.ScheduleBriefResponse;
 import com.example.polly.PollyDemo.dto.ScheduleRequest;
 import com.example.polly.PollyDemo.dto.ScheduleResponse;
 import com.example.polly.PollyDemo.model.ResponseFileView;
@@ -89,6 +90,16 @@ public class ScheduleController {
     public void deleteSchedule(@RequestHeader(name = "Authorization", required = false) String accessToken,
                                @PathVariable Integer scheduleId) {
 
+    }
+
+    /**
+     * 오늘 남은 일정을 브리핑하기
+     */
+    @PostMapping("/schedules/brief")
+    public ScheduleBriefResponse berofSchedules() {
+        ScheduleBriefResponse scheduleBriefResponse = new ScheduleBriefResponse();
+        scheduleBriefResponse.setUrl("url");
+        return scheduleBriefResponse;
     }
 
     private ScheduleResponse createScheduleResponse() {
