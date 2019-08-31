@@ -5,6 +5,12 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.polly.model.*;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3control.model.AWSS3ControlException;
+import com.example.polly.PollyDemo.model.ResponseFileView;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
@@ -14,8 +20,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 @Slf4j
 @Service
@@ -26,6 +35,10 @@ public class PollyService {
     @Autowired
     @Qualifier("pollyClientKorea")
     private AmazonPollyClient polly;
+
+    @Autowired
+    @Qualifier("s3Client")
+    private AmazonS3 s3Client;
 
     @Autowired
     private PollyService self;
@@ -62,10 +75,47 @@ public class PollyService {
     }
 
     /**
-     * synthesize 메서드를 통해 생성된 음성의 mp3파일의 InputStream을 리턴해주는 메서드
+     * synthesize 메서드를 통해 생성된 음성의 mp3파일을 S3 버킷에 업로드 하고
+     * 업로드한 url을 리턴해주는 메서드
      */
-    public InputStream getMp3(String text, String country) throws Exception {
-        return self.synthesize(text, OutputFormat.Mp3).getAudioStream();
+    public ResponseFileView getMp3(String text, String fileName) {
+        log.info("]-----] PollyService.getMp3::params [-----[ : text : {} , fileName : {}", text, fileName);
+
+        ResponseFileView view = new ResponseFileView();
+
+        SynthesizeSpeechRequest synthesizeSpeechRequest = new SynthesizeSpeechRequest()
+                .withOutputFormat(OutputFormat.Mp3)
+                .withVoiceId(voice.getId())
+                .withText(text);
+        try {
+            SynthesizeSpeechResult synthesizeSpeechResult = polly.synthesizeSpeech(synthesizeSpeechRequest);
+
+            Bucket bucketItem = new Bucket();
+
+            for (Bucket bucket : s3Client.listBuckets()) {
+                log.info("]-----] AWS S3 Bucket List item [-----[ : {}", bucket);
+                bucketItem = bucket;
+            }
+
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType("audio/mpeg3");
+            s3Client.putObject(bucketItem.getName(), fileName, synthesizeSpeechResult.getAudioStream(), metadata);
+
+            URL url = s3Client.getUrl(bucketItem.getName(), fileName);
+            log.info("]-----] AWS S3 File Uploaded link [-----[ : Host : {} , Path : {} , File : {} ", url.getHost(), url.getPath(), url.getFile());
+
+            view.setStatusCode("200");
+            view.setMessage("Success!");
+            view.setFileUrl("http://"+url.getHost() + url.getPath());
+
+        } catch (Exception e) {
+            System.err.println("Exception caught: " + e);
+            view.setStatusCode("500");
+            view.setMessage("Fail! : " + e.toString());
+            view.setFileUrl(null);
+        }
+
+        return view;
     }
 
     /**

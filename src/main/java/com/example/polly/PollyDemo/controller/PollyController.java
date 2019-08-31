@@ -1,6 +1,7 @@
 package com.example.polly.PollyDemo.controller;
 
 import com.amazonaws.regions.Regions;
+import com.example.polly.PollyDemo.model.ResponseFileView;
 import com.example.polly.PollyDemo.service.PollyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,76 +27,53 @@ public class PollyController {
     private PollyService pollyService;
 
     @GetMapping(value = "/message")
-    public ResponseEntity<Object> getTestMessage(@RequestParam String country, @RequestParam String text) {
+    public ResponseFileView getTestMessage(@RequestParam String country, @RequestParam String text) {
         log.info("]-----] PollyController.getTestMessage params [----[ : country = {} , text = {}", country, text);
 
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String fileName = currentDateTime+"_polly_sound.mp3";
-        String outputFile = "/Users/bsc/Desktop/workspace/aws-polly-test/src/main/resources/static/"+fileName;
 
-//        FileOutputStream fileOutputStream = null;
+        ResponseFileView view = new ResponseFileView();
+
         try {
-            InputStream msg = pollyService.getMp3(text, country);
-            String contentType = pollyService.getContentType(text, country);
-
-            Files.copy(msg, Paths.get(outputFile));
-            File file = new File(outputFile);
-
-//
-//            File convertFile = new File(outputFile);
-//            convertFile.createNewFile();
-//            fileOutputStream = new FileOutputStream(convertFile);
-//
-//            int read = 0;
-//            byte[] msgByte = new byte[msg.available()];
-//            while ((read = msg.read(msgByte)) != -1) {
-//                fileOutputStream.write(msgByte, 0, read);
-//            }
-
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-
-            ResponseEntity<Object> responseEntity = ResponseEntity.ok().contentLength(file.length()).contentType(MediaType.parseMediaType(contentType)).body(resource);
-            return responseEntity;
-
+            view = pollyService.getMp3(text, fileName);
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        finally {
-//            if (fileOutputStream != null) {
-//                fileOutputStream.close();
-//            }
-//        }
-        return null;
 
-//        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-//
-//        ResponseEntity<Object> responseEntity = ResponseEntity.ok().contentLength(file.length()).contentType(MediaType.parseMediaType(contentType)).body(resource);
-//        return responseEntity;
+        return view;
     }
 
+    /**
+     *  지워도 되는 컨트롤러
+     *  */
     @GetMapping(value = "/message2")
-    public byte[] getTestMessage2(@RequestParam String country, @RequestParam String text) {
+    public ResponseFileView getTestMessage2(@RequestParam String country, @RequestParam String text) {
         log.info("]-----] PollyController.getTestMessage2 params [----[ : country = {} , text = {}", country, text);
 
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String fileName = currentDateTime+"_polly_sound.mp3";
         String outputFile = "/Users/bsc/Desktop/workspace/aws-polly-test/src/main/resources/static/"+fileName;
 
+        ResponseFileView view = new ResponseFileView();
+
         try {
-            InputStream msg = pollyService.getMp3(text, country);
-            String contentType = pollyService.getContentType(text, country);
-            byte[] buff = inputStreamToByteArray(msg);
+//            FileOutputStream msg = pollyService.synthesize(text, fileName);
+//            String contentType = pollyService.getContentType(text, country);
+//            byte[] buff = inputStreamToByteArray(msg);
+//
+//            FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+//            fileOutputStream.write(buff);
+//            fileOutputStream.close();
 
-            FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-            fileOutputStream.write(buff);
-            fileOutputStream.close();
-
-            return buff;
+            view.setStatusCode("200");
+            view.setMessage("Success!");
+            view.setFileUrl("https://www.example.com");
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return view;
     }
 
     @GetMapping(value = "/play")

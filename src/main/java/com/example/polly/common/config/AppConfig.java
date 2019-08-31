@@ -37,14 +37,14 @@ public class AppConfig {
         PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
         encryptor.setConfig(encryptConfig());
         encryptor.setPassword("AMATHON-POLLY-SERVICE");
-        encryptor.setPoolSize(1);
+//        encryptor.setPoolSize(1);
         return encryptor;
     }
 
-    @Bean(name = "envProp")
-    public PropertiesFactoryBean envProp() {
-        PropertiesFactoryBean bean = new PropertiesFactoryBean();
-        bean.setLocation(new ClassPathResource(APPLICATION_CONFIG_PATH));
-        return bean;
-    }
+//    @Bean(name = "envProp")
+//    public PropertiesFactoryBean envProp() {
+//        PropertiesFactoryBean bean = new PropertiesFactoryBean();
+//        bean.setLocation(new ClassPathResource(APPLICATION_CONFIG_PATH));
+//        return bean;
+//    }
 }
