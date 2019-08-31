@@ -1,8 +1,8 @@
 package com.example.polly.common.config;
 
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.polly.AmazonPollyClientBuilder;
@@ -25,7 +25,7 @@ public class AwsConfig {
     private String awsSecretKey;
 
     @Bean
-    public BasicAWSCredentials credentials() {
+    public AWSCredentials credentials() {
         log.info("]-----] AWS Configuration :: credentials [-----[ awsAccessKey : {} , awsSecretKey : {}", awsAccessKey, awsSecretKey);
         return new BasicAWSCredentials(awsAccessKey, awsSecretKey);
     }
@@ -37,11 +37,21 @@ public class AwsConfig {
 //        return s3Client;
 //    }
 
-    @Bean
-    public AmazonPollyClient pollyClient() {
+    // 특정 지역에서 Amazon Polly 클라이언트 생성
+    @Bean("pollyClientKorea")
+    public AmazonPollyClient pollyClientKorea() {
         AmazonPollyClient pollyClient = (AmazonPollyClient) AmazonPollyClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials()))
                 .withRegion(Regions.AP_NORTHEAST_2)
+                .build();
+        return pollyClient;
+    }
+
+    @Bean("pollyClientUsEast")
+    public AmazonPollyClient pollyClientUsEast() {
+        AmazonPollyClient pollyClient = (AmazonPollyClient) AmazonPollyClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials()))
+                .withRegion(Regions.US_EAST_1)
                 .build();
         return pollyClient;
     }
