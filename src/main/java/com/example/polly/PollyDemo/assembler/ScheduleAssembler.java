@@ -14,6 +14,7 @@ public class ScheduleAssembler {
         scheduleResponse.setId(schedule.getId());
         scheduleResponse.setUrl(schedule.getUrl());
         scheduleResponse.setDueAt(schedule.getDueAt());
+        scheduleResponse.setRemindAt(schedule.getRemindAt());
         scheduleResponse.setTitle(schedule.getTitle());
         scheduleResponse.setDescription(schedule.getDescription());
         return scheduleResponse;
