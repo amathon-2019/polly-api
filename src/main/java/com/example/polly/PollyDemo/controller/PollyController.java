@@ -26,22 +26,15 @@ public class PollyController {
     @Autowired
     private PollyService pollyService;
 
+    private LocalDateTime localDateTime = LocalDateTime.now();
+    private String currentDateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    private String fileName = currentDateTime+"_polly_sound.mp3";
+
+
     @GetMapping(value = "/message")
-    public ResponseFileView getTestMessage(@RequestParam String country, @RequestParam String text) {
+    public String getTestMessage(@RequestParam String country, @RequestParam String text) {
         log.info("]-----] PollyController.getTestMessage params [----[ : country = {} , text = {}", country, text);
-
-        String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String fileName = currentDateTime+"_polly_sound.mp3";
-
-        ResponseFileView view = new ResponseFileView();
-
-        try {
-            view = pollyService.getMp3(text, fileName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return view;
+        return pollyService.getMp3(text, fileName);
     }
 
     /**
